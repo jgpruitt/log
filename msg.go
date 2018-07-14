@@ -32,13 +32,20 @@ import (
 type Level uint8
 
 const (
+	// DEBUG is meant for the finest grained detailed logging
 	DEBUG Level = 1 << iota
+	// NORMAL is meant for normal run-of-the-mill logging
 	NORMAL
+	// WARNING is meant for logging that may need extra attention but isn't a problem
 	WARNING
+	// ERROR is meant for logging that needs extra attention due to problems
 	ERROR
+	// PANIC is meant for logging problems just prior to panicking
 	PANIC
+	// FATAL is meant for logging extreme problems just prior to exiting the process
 	FATAL
 
+	// ALL is a bit mask enabling all the log Levels
 	ALL = DEBUG | NORMAL | WARNING | ERROR | PANIC | FATAL
 )
 
