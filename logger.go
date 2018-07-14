@@ -20,8 +20,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package log handles logging
-package log
+// Package logger handles logging
+package logger
 
 import (
 	"fmt"
@@ -37,18 +37,25 @@ import (
 type Logger struct {
 	mu      sync.Mutex
 	enabled Level
-	exit    func()
+	exit    func(code int)
 	sinks   []Sink
 }
 
 // NewLogger creates a new Logger which will write log messages to the Sinks passed at the Levels enabled.
 // The exit func passed will be used for the FATAL Level and should ultimately kill the process.
-func NewLogger(enabled Level, exit func(), sinks ...Sink) *Logger {
+func NewLogger(enabled Level, exit func(code int), sinks ...Sink) *Logger {
 	return &Logger{
 		enabled: enabled,
 		exit:    exit,
 		sinks:   sinks,
 	}
+}
+
+// SetSinks sets the Sinks to which the Logger will write Log messages
+func (l *Logger) SetSinks(sinks ...Sink) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.sinks = sinks
 }
 
 // log creates a Msg and writes it to the attached Sinks
@@ -221,31 +228,31 @@ func (l *Logger) Panicf(format string, v ...interface{}) {
 }
 
 // Fatal will print in the manner of fmt.Print to the standard Logger if the FATAL Level is enabled
-// After logging the message, Fatal will call os.Exit(1)
-func (l *Logger) Fatal(v ...interface{}) {
+// After logging the message, Fatal will call exit with the code
+func (l *Logger) Fatal(code int, v ...interface{}) {
 	if l.enabled&FATAL != FATAL {
 		return
 	}
 	l.log(FATAL, fmt.Sprint(v...))
-	l.exit()
+	l.exit(code)
 }
 
 // Fatalln will print in the manner of fmt.Println to the standard Logger if the FATAL Level is enabled
-// After logging the message, Fatalln will call os.Exit(1)
-func (l *Logger) Fatalln(v ...interface{}) {
+// After logging the message, Fatalln will call exit with the code
+func (l *Logger) Fatalln(code int, v ...interface{}) {
 	if l.enabled&FATAL != FATAL {
 		return
 	}
 	l.log(FATAL, fmt.Sprintln(v...))
-	l.exit()
+	l.exit(code)
 }
 
 // Fatalf will print in the manner of fmt.Printf to the standard Logger if the FATAL Level is enabled
-// After logging the message, Fatalf will call os.Exit(1)
-func (l *Logger) Fatalf(format string, v ...interface{}) {
+// After logging the message, Fatalf will call exit with the code
+func (l *Logger) Fatalf(code int, format string, v ...interface{}) {
 	if l.enabled&FATAL != FATAL {
 		return
 	}
 	l.log(FATAL, fmt.Sprintf(format, v...))
-	l.exit()
+	l.exit(code)
 }

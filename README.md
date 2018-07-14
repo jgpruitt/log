@@ -1,2 +1,2 @@
-# log
+# logger
 Logging for Go
