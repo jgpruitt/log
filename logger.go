@@ -25,7 +25,6 @@ package log
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -38,13 +37,16 @@ import (
 type Logger struct {
 	mu      sync.Mutex
 	enabled Level
+	exit    func()
 	sinks   []Sink
 }
 
-// NewLogger creates a new Logger which will write log messages to the Sinks passed at the Levels enabled
-func NewLogger(enabled Level, sinks ...Sink) *Logger {
+// NewLogger creates a new Logger which will write log messages to the Sinks passed at the Levels enabled.
+// The exit func passed will be used for the FATAL Level and should ultimately kill the process.
+func NewLogger(enabled Level, exit func(), sinks ...Sink) *Logger {
 	return &Logger{
 		enabled: enabled,
+		exit:    exit,
 		sinks:   sinks,
 	}
 }
@@ -225,7 +227,7 @@ func (l *Logger) Fatal(v ...interface{}) {
 		return
 	}
 	l.log(FATAL, fmt.Sprint(v...))
-	os.Exit(1)
+	l.exit()
 }
 
 // Fatalln will print in the manner of fmt.Println to the standard Logger if the FATAL Level is enabled
@@ -235,7 +237,7 @@ func (l *Logger) Fatalln(v ...interface{}) {
 		return
 	}
 	l.log(FATAL, fmt.Sprintln(v...))
-	os.Exit(1)
+	l.exit()
 }
 
 // Fatalf will print in the manner of fmt.Printf to the standard Logger if the FATAL Level is enabled
@@ -245,5 +247,5 @@ func (l *Logger) Fatalf(format string, v ...interface{}) {
 		return
 	}
 	l.log(FATAL, fmt.Sprintf(format, v...))
-	os.Exit(1)
+	l.exit()
 }

@@ -29,6 +29,9 @@ import (
 
 var std = &Logger{
 	enabled: ALL,
+	exit: func() {
+		os.Exit(1)
+	},
 }
 
 // StandardLogger returns a pointer to the standard Logger
@@ -41,6 +44,13 @@ func SetEnabled(enabled Level) {
 	std.mu.Lock()
 	defer std.mu.Unlock()
 	std.enabled = enabled
+}
+
+// SetExit sets the func to be used for the FATAL Level and should ultimately kill the process.
+func SetExit(exit func()) {
+	std.mu.Lock()
+	defer std.mu.Unlock()
+	std.exit = exit
 }
 
 // SetSinks sets the Sinks to which the standard Logger will write log messages
